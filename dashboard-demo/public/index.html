@@ -647,7 +647,7 @@ async function requireAuth() {
     body.innerHTML = evaluations.map(e => {
       let certCell;
       if (e.certificate_status === "Issued") {
-        const certUrl = `https://kalachain-technologies.github.io/certification-platform/certificate/?id=${p.token_id}`;
+        const certUrl = `https://kalachain-technologies.github.io/certification-platform/certificate/?id=${e.token_id}`;
         certCell = `
           <div class="cert-cell-stack">
             <span class="seal-badge issued"><span class="hex"></span>Issued</span>
