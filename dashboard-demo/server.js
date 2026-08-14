@@ -40,20 +40,23 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- Blockchain setup (reuses the same contract already deployed) ---
-const RPC_URL = process.env.POLYGON_AMOY_RPC_URL;
-const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
 const artifact = JSON.parse(
   fs.readFileSync(path.join(__dirname, "..", "build", "CertificateSBT.json"), "utf8")
 );
 const deployment = JSON.parse(
   fs.readFileSync(path.join(__dirname, "..", "build", "deployment.json"), "utf8")
 );
+const RPC_URL =
+  deployment.network === "polygon"
+    ? process.env.POLYGON_MAINNET_RPC_URL
+    : process.env.POLYGON_AMOY_RPC_URL;
+const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
 
 let contract = null;
 function getContract() {
   if (!contract) {
     if (!RPC_URL || !PRIVATE_KEY) {
-      throw new Error("POLYGON_AMOY_RPC_URL and DEPLOYER_PRIVATE_KEY must be set in .env");
+      throw new Error("RPC URL (POLYGON_AMOY_RPC_URL / POLYGON_MAINNET_RPC_URL) and DEPLOYER_PRIVATE_KEY must be set in .env");
     }
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -63,7 +66,10 @@ function getContract() {
 }
 
 function buildVerificationLink(txHash) {
-  return `https://amoy.polygonscan.com/tx/${txHash}`;
+  const isMainnet = deployment.network === "polygon";
+  return isMainnet
+    ? `https://polygonscan.com/tx/${txHash}`
+    : `https://amoy.polygonscan.com/tx/${txHash}`;
 }
 
 // --- API routes ---

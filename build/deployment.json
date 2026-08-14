@@ -1,7 +1,7 @@
 {
-  "network": "amoy",
-  "address": "0x5340aCB453B7951a896f238EAAb0EFF74c2DA12A",
-  "deployer": "0x9f005EdEA75bA8381C191468CCa72ABa55d688db",
-  "deployedAt": "2026-07-23T09:15:33.333Z",
+  "network": "polygon",
+  "address": "0x2359e20fbf647f3b300A30308F55ceA46836670a",
+  "deployer": "0xF9f6419b00ce83C1747C04A25729Cb9B0352C21a",
+  "deployedAt": "2026-08-14T03:49:56.849Z",
   "abiPath": "build/CertificateSBT.json"
 }
