@@ -347,11 +347,7 @@
           </div>
           <div>
             <label>Email</label>
-            <input type="email" id="email">
-          </div>
-          <div>
-            <label>Wallet Address</label>
-            <input type="text" id="walletAddress" required placeholder="0x...">
+            <input type="email" id="email" required>
           </div>
           <div>
             <label>Workshop Name</label>
@@ -414,8 +410,8 @@
             <input type="text" id="eval-participantName" required>
           </div>
           <div>
-            <label>Wallet Address</label>
-            <input type="text" id="eval-walletAddress" required placeholder="0x...">
+            <label>Email</label>
+            <input type="email" id="eval-email" required>
           </div>
           <div class="full">
             <label>Event Name</label>
@@ -607,7 +603,6 @@ async function requireAuth() {
     const payload = {
       name: document.getElementById("name").value,
       email: document.getElementById("email").value,
-      walletAddress: document.getElementById("walletAddress").value,
       workshopName: document.getElementById("workshopName").value,
       workshopDate: document.getElementById("workshopDate").value,
     };
@@ -675,7 +670,7 @@ async function requireAuth() {
 
     const payload = {
       participantName: document.getElementById("eval-participantName").value,
-      walletAddress: document.getElementById("eval-walletAddress").value,
+      email: document.getElementById("eval-email").value,
       eventName: document.getElementById("eval-eventName").value,
       evaluatorName: document.getElementById("eval-evaluatorName").value,
       evaluatorTitle: document.getElementById("eval-evaluatorTitle").value,

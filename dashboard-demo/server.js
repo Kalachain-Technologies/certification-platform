@@ -53,6 +53,7 @@ const RPC_URL =
 const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
 
 let contract = null;
+let PLATFORM_WALLET_ADDRESS = null;
 function getContract() {
   if (!contract) {
     if (!RPC_URL || !PRIVATE_KEY) {
@@ -60,9 +61,19 @@ function getContract() {
     }
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+    PLATFORM_WALLET_ADDRESS = wallet.address;
     contract = new ethers.Contract(deployment.address, artifact.abi, wallet);
   }
   return contract;
+}
+
+// Certificates are soulbound (non-transferable) -- students never need a
+// wallet of their own. Every certificate mints to this one fixed platform
+// wallet; the student's email is what identifies them and is used to send
+// them their certificate link.
+function getPlatformWalletAddress() {
+  if (!PLATFORM_WALLET_ADDRESS) getContract(); // ensures wallet is initialized
+  return PLATFORM_WALLET_ADDRESS;
 }
 
 function buildVerificationLink(txHash) {
@@ -86,16 +97,16 @@ app.get("/api/participants", async (req, res) => {
 
 // Register a new participant (the "registration" step)
 app.post("/api/participants", async (req, res) => {
-  const { name, email, walletAddress, workshopName, workshopDate } = req.body;
-  if (!name || !walletAddress || !workshopName) {
-    return res.status(400).json({ error: "name, walletAddress, and workshopName are required" });
+  const { name, email, workshopName, workshopDate } = req.body;
+  if (!name || !email || !workshopName) {
+    return res.status(400).json({ error: "name, email, and workshopName are required" });
   }
   const { data, error } = await supabase
     .from("participants")
     .insert([{
       name,
       email,
-      wallet_address: walletAddress,
+      wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
       workshop_date: workshopDate || null,
     }])
@@ -123,7 +134,7 @@ app.post("/api/participants/:id/approve", async (req, res) => {
   try {
     const contractInstance = getContract();
     const tx = await contractInstance.issueCertificate(
-      participant.wallet_address,
+      getPlatformWalletAddress(),
       0, // CertKind.PARTICIPATION
       participant.name,
       participant.workshop_name,
@@ -175,14 +186,14 @@ app.get("/api/evaluations", async (req, res) => {
 // AND the graded certificate is minted automatically, no separate step.
 app.post("/api/evaluations", async (req, res) => {
   const {
-    participantId, participantName, walletAddress, eventName,
+    participantId, participantName, email, eventName,
     evaluatorName, evaluatorTitle, marksTotal, marksMax, grade,
     evaluationParameters, comments, audioFeedbackUrl,
   } = req.body;
 
-  if (!participantName || !walletAddress || !eventName || !evaluatorName || !grade) {
+  if (!participantName || !email || !eventName || !evaluatorName || !grade) {
     return res.status(400).json({
-      error: "participantName, walletAddress, eventName, evaluatorName, and grade are required",
+      error: "participantName, email, eventName, evaluatorName, and grade are required",
     });
   }
 
@@ -192,7 +203,8 @@ app.post("/api/evaluations", async (req, res) => {
     .insert([{
       participant_id: participantId || null,
       participant_name: participantName,
-      wallet_address: walletAddress,
+      email,
+      wallet_address: getPlatformWalletAddress(),
       event_name: eventName,
       evaluator_name: evaluatorName,
       evaluator_title: evaluatorTitle || "Evaluator",
@@ -288,20 +300,19 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
 
   rows.forEach((row, i) => {
     const name = getField(row, "Name", "Full Name", "Participant Name");
-    const walletAddress = getField(row, "Wallet Address", "Wallet", "Wallet Addr");
-    const workshopName = getField(row, "Workshop Name", "Workshop", "Event Name");
     const email = getField(row, "Email", "Email Address");
+    const workshopName = getField(row, "Workshop Name", "Workshop", "Event Name");
     const workshopDate = getField(row, "Workshop Date", "Date");
 
-    if (!name || !walletAddress || !workshopName) {
-      skipped.push({ row: i + 2, reason: "Missing required field(s): Name, Wallet Address, or Workshop Name" });
+    if (!name || !email || !workshopName) {
+      skipped.push({ row: i + 2, reason: "Missing required field(s): Name, Email, or Workshop Name" });
       return;
     }
 
     toInsert.push({
       name,
-      email: email || null,
-      wallet_address: walletAddress,
+      email,
+      wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
       workshop_date: workshopDate || null,
       // approval_status and certificate_status default to Pending/NotIssued
