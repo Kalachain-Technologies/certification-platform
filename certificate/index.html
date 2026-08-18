@@ -366,7 +366,7 @@
     <div class="recipient-section">
         <p class="statement">${isEvaluation ? "Awarded to" : "This is officially compiled to verify that"}</p>
         <div class="name">${escapeHtml(name || "")}</div>
-        <p class="statement">participated in the workshop and presented the assigned work</p>
+        <p class="statement">${isEvaluation ? "participated in the workshop and presented the assigned work" : "registered and participated in the workshop"}</p>
         <p class="course">${escapeHtml(eventName || "")}</p>
     </div>
 
