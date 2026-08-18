@@ -394,9 +394,9 @@
     `;
   }
 
-  async function fetchFromTable(table, tokenId) {
+  async function fetchFromTable(table, txHash) {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/${table}?token_id=eq.${encodeURIComponent(tokenId)}&select=*`,
+      `${SUPABASE_URL}/rest/v1/${table}?tx_hash=eq.${encodeURIComponent(txHash)}&select=*`,
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -409,15 +409,15 @@
   }
 
   async function loadCertificate() {
-    const tokenId = getTokenIdFromUrl();
-    if (!tokenId) {
+    const txHash = getTokenIdFromUrl();
+    if (!txHash) {
       showError("No certificate ID was provided in the link. Please check the link and try again.");
       return;
     }
     try {
       const [participantRows, evaluationRows] = await Promise.all([
-        fetchFromTable("participants", tokenId),
-        fetchFromTable("evaluations", tokenId),
+        fetchFromTable("participants", txHash),
+        fetchFromTable("evaluations", txHash),
       ]);
 
       if (evaluationRows.length) {
@@ -425,7 +425,7 @@
       } else if (participantRows.length) {
         renderCertificate(participantRows[0], false);
       } else {
-        showError(`No certificate exists for ID "${escapeHtml(tokenId)}".`);
+        showError(`No certificate exists for ID "${escapeHtml(txHash)}".`);
       }
     } catch (err) {
       showError(`Something went wrong loading this certificate. (${err.message})`);
