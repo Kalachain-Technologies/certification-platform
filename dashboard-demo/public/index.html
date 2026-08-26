@@ -321,81 +321,15 @@
   </div>
 
   <div class="navbar">
-    <button class="tab-btn active" data-tab="tab-register-p1">Add Participant — Phase 1</button>
-    <button class="tab-btn" data-tab="tab-list-p1">Participants — Phase 1</button>
-    <button class="tab-btn" data-tab="tab-register-p2">Add Evaluation — Phase 2</button>
-    <button class="tab-btn" data-tab="tab-list-p2">Participants — Phase 2</button>
+    <button class="tab-btn active" data-tab="tab-register-p2">Add Evaluation </button>
+    <button class="tab-btn" data-tab="tab-list-p2">Participants </button>
   </div>
 
   <div class="page">
 
-    <div class="tab-section active" id="tab-register-p1">
+    <div class="tab-section active" id="tab-register-p2">
       <div class="phase-heading">
-        <span class="phase-index">01</span>
-        <div>
-          <h2>Workshop Participation</h2>
-          <div class="phase-sub">Register a participant, then approve to trigger automatic minting</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3><span class="dot"></span>Register New Participant</h3>
-        <form id="register-form">
-          <div>
-            <label>Full Name</label>
-            <input type="text" id="name" required>
-          </div>
-          <div>
-            <label>Email</label>
-            <input type="email" id="email" required>
-          </div>
-          <div>
-            <label>Workshop Name</label>
-            <input type="text" id="workshopName" required>
-          </div>
-          <div>
-            <label>Workshop Date</label>
-            <input type="date" id="workshopDate">
-          </div>
-          <div class="full">
-            <button type="submit">Register Participant</button>
-          </div>
-        </form>
-        <div class="error-msg" id="register-error"></div>
-      </div>
-    </div>
-
-    <div class="tab-section" id="tab-list-p1">
-      <div class="phase-heading">
-        <span class="phase-index">01</span>
-        <div>
-          <h2>Workshop Participants</h2>
-          <div class="phase-sub">Approve to trigger automatic minting</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3><span class="dot"></span>Participants</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Workshop</th>
-              <th>Approval</th>
-              <th>Certificate</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="participants-body">
-            <tr><td colspan="5" class="empty-state">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="tab-section" id="tab-register-p2">
-      <div class="phase-heading">
-        <span class="phase-index">02</span>
+        
         <div>
           <h2>Performance Evaluation</h2>
           <div class="phase-sub">Issue a graded evaluation certificate, minted immediately</div>
@@ -451,7 +385,7 @@
 
     <div class="tab-section" id="tab-list-p2">
       <div class="phase-heading">
-        <span class="phase-index">02</span>
+        
         <div>
           <h2>Evaluation Certificates</h2>
           <div class="phase-sub">Graded performance evaluations, minted on issue</div>
@@ -523,107 +457,11 @@ async function requireAuth() {
     const authed = await requireAuth();
     if (!authed) return;
 
-    const API = "/api/participants";
-
-  async function loadParticipants() {
-    const res = await fetch(API);
-    const data = await res.json();
-    renderTable(data);
-  }
-
-  function renderTable(participants) {
-    const body = document.getElementById("participants-body");
-    if (!participants.length) {
-      body.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="hex-lg"></div>No participants yet — register one above.</div></td></tr>`;
-      return;
-    }
-
-    body.innerHTML = participants.map(p => {
-      const approvalBadge = p.approval_status === "Approved"
-        ? `<span class="seal-badge approved"><span class="hex"></span>Approved</span>`
-        : `<span class="seal-badge pending"><span class="hex"></span>Pending</span>`;
-
-      let certCell;
-      if (p.certificate_status === "Issued") {
-        const certUrl = `https://kalachain-technologies.github.io/certification-platform/certificate/?id=${p.tx_hash}`;
-        certCell = `
-          <div class="cert-cell-stack">
-            <span class="seal-badge issued"><span class="hex"></span>Issued</span>
-            <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a>
-            <a class="cert-link" href="${p.verification_link}" target="_blank" style="color: var(--muted);">View Transaction →</a>
-            <span class="tx-hash">${p.tx_hash}</span>
-          </div>`;
-      } else if (p.approval_status === "Approved") {
-        certCell = `<span class="seal-badge minting"><span class="hex"></span>Minting…</span>`;
-      } else {
-        certCell = `<span class="seal-badge pending"><span class="hex"></span>Not issued</span>`;
-      }
-
-      const actionCell = p.approval_status !== "Approved"
-        ? `<button class="approve-btn" onclick="approveParticipant('${p.id}', this)">Approve</button>`
-        : "";
-
-      return `
-        <tr>
-          <td data-label="Name" class="name-cell">${escapeHtml(p.name)}</td>
-          <td data-label="Workshop">${escapeHtml(p.workshop_name)}</td>
-          <td data-label="Approval">${approvalBadge}</td>
-          <td data-label="Certificate">${certCell}</td>
-          <td data-label="">${actionCell}</td>
-        </tr>`;
-    }).join("");
-  }
-
   function escapeHtml(str) {
     const div = document.createElement("div");
     div.textContent = str ?? "";
     return div.innerHTML;
   }
-
-  async function approveParticipant(id, btnEl) {
-    btnEl.disabled = true;
-    btnEl.textContent = "Approving...";
-    try {
-      const res = await fetch(`${API}/${id}/approve`, { method: "POST" });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Approval failed");
-      await loadParticipants();
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-      await loadParticipants();
-    }
-  }
-  window.approveParticipant = approveParticipant;
-
-  document.getElementById("register-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const errorEl = document.getElementById("register-error");
-    errorEl.textContent = "";
-
-    const payload = {
-      name: document.getElementById("name").value,
-      email: document.getElementById("email").value,
-      workshopName: document.getElementById("workshopName").value,
-      workshopDate: document.getElementById("workshopDate").value,
-    };
-
-    try {
-      const res = await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Registration failed");
-      e.target.reset();
-      await loadParticipants();
-    } catch (err) {
-      errorEl.textContent = err.message;
-    }
-  });
-
-  loadParticipants();
-  setInterval(loadParticipants, 5000);
 
   const EVAL_API = "/api/evaluations";
 
