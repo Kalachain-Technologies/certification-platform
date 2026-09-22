@@ -354,6 +354,10 @@
             <input type="text" id="workshopName" required>
           </div>
           <div>
+            <label>Workshop By</label>
+            <input type="text" id="workshopBy" required>
+          </div>
+          <div>
             <label>Workshop Date</label>
             <input type="date" id="workshopDate">
           </div>
@@ -416,6 +420,10 @@
           <div class="full">
             <label>Event Name</label>
             <input type="text" id="eval-eventName" required>
+          </div>
+          <div class="full">
+            <label>Workshop By</label>
+            <input type="text" id="eval-workshopBy" required>
           </div>
           <div>
             <label>Evaluator Name</label>
@@ -604,6 +612,7 @@ async function requireAuth() {
       name: document.getElementById("name").value,
       email: document.getElementById("email").value,
       workshopName: document.getElementById("workshopName").value,
+      workshopBy: document.getElementById("workshopBy").value,
       workshopDate: document.getElementById("workshopDate").value,
     };
 
@@ -672,6 +681,7 @@ async function requireAuth() {
       participantName: document.getElementById("eval-participantName").value,
       email: document.getElementById("eval-email").value,
       eventName: document.getElementById("eval-eventName").value,
+      workshopBy: document.getElementById("eval-workshopBy").value,
       evaluatorName: document.getElementById("eval-evaluatorName").value,
       evaluatorTitle: document.getElementById("eval-evaluatorTitle").value,
       marksTotal: parseInt(document.getElementById("eval-marksTotal").value) || null,

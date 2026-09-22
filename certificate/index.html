@@ -373,7 +373,7 @@
 
       <div>
         <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Participation"}</p>
-        <p class="workshop-by">Workshop by Dr. Urvashi Mohinani</p>
+        <p class="workshop-by">Workshop by ${escapeHtml(row.workshop_by || "Dr. Urvashi Mohinani")}</p>
         <div class="title-rule"></div>
       </div>
     </div>

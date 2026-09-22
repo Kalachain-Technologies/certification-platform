@@ -97,9 +97,9 @@ app.get("/api/participants", async (req, res) => {
 
 // Register a new participant (the "registration" step)
 app.post("/api/participants", async (req, res) => {
-  const { name, email, workshopName, workshopDate } = req.body;
-  if (!name || !email || !workshopName) {
-    return res.status(400).json({ error: "name, email, and workshopName are required" });
+  const { name, email, workshopName, workshopBy, workshopDate } = req.body;
+  if (!name || !email || !workshopName || !workshopBy) {
+    return res.status(400).json({ error: "name, email, workshopName, and workshopBy are required" });
   }
   const { data, error } = await supabase
     .from("participants")
@@ -108,6 +108,7 @@ app.post("/api/participants", async (req, res) => {
       email,
       wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
+      workshop_by: workshopBy,
       workshop_date: workshopDate || null,
     }])
     .select();
@@ -187,13 +188,14 @@ app.get("/api/evaluations", async (req, res) => {
 app.post("/api/evaluations", async (req, res) => {
   const {
     participantId, participantName, email, eventName,
+    workshopBy,
     evaluatorName, evaluatorTitle, marksTotal, marksMax, grade,
     evaluationParameters, comments, audioFeedbackUrl,
   } = req.body;
 
-  if (!participantName || !email || !eventName || !evaluatorName || !grade) {
+  if (!participantName || !email || !eventName || !workshopBy || !evaluatorName || !grade) {
     return res.status(400).json({
-      error: "participantName, email, eventName, evaluatorName, and grade are required",
+      error: "participantName, email, eventName, workshopBy, evaluatorName, and grade are required",
     });
   }
 
@@ -206,6 +208,7 @@ app.post("/api/evaluations", async (req, res) => {
       email,
       wallet_address: getPlatformWalletAddress(),
       event_name: eventName,
+      workshop_by: workshopBy,
       evaluator_name: evaluatorName,
       evaluator_title: evaluatorTitle || "Evaluator",
       marks_total: marksTotal || null,
@@ -302,10 +305,11 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
     const name = getField(row, "Name", "Full Name", "Participant Name");
     const email = getField(row, "Email", "Email Address");
     const workshopName = getField(row, "Workshop Name", "Workshop", "Event Name");
+    const workshopBy = getField(row, "Workshop By", "Workshop by", "Instructor", "Host");
     const workshopDate = getField(row, "Workshop Date", "Date");
 
-    if (!name || !email || !workshopName) {
-      skipped.push({ row: i + 2, reason: "Missing required field(s): Name, Email, or Workshop Name" });
+    if (!name || !email || !workshopName || !workshopBy) {
+      skipped.push({ row: i + 2, reason: "Missing required field(s): Name, Email, Workshop Name, or Workshop By" });
       return;
     }
 
@@ -314,6 +318,7 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
       email,
       wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
+      workshop_by: workshopBy,
       workshop_date: workshopDate || null,
       // approval_status and certificate_status default to Pending/NotIssued
       // via the table's own column defaults -- not set here on purpose.
@@ -322,7 +327,7 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
 
   if (!toInsert.length) {
     return res.status(400).json({
-      error: "No valid rows found. Make sure your spreadsheet has Name, Wallet Address, and Workshop Name columns.",
+      error: "No valid rows found. Make sure your spreadsheet has Name, Email, Workshop Name, and Workshop By columns.",
       skipped,
     });
   }

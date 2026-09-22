@@ -77,6 +77,7 @@ async function main() {
         { trait_type: "Certificate Type", value: "Evaluation" },
         { trait_type: "Participant Name", value: s.participantName },
         { trait_type: "Event Name", value: s.eventName },
+        { trait_type: "Workshop By", value: s.workshopBy || "Dr. Urvashi Mohinani" },
         { trait_type: "Evaluator Name", value: s.evaluation.evaluatorName },
         { trait_type: "Grade", value: s.evaluation.grade },
         { trait_type: "Total Marks", value: `${s.evaluation.totalMarks}/${s.evaluation.maxMarks}` },
@@ -87,6 +88,7 @@ async function main() {
         name: s.participantName,
         walletAddress: s.walletAddress,
       },
+      workshopBy: s.workshopBy || "Dr. Urvashi Mohinani",
       evaluatorName: s.evaluation.evaluatorName,
       marksAndGrade: {
         totalMarks: s.evaluation.totalMarks,
