@@ -202,20 +202,22 @@
     text-transform: uppercase; letter-spacing: 0.05em;
     color: var(--muted); margin-bottom: 6px;
   }
-  input {
+  input, select {
     width: 100%; padding: 10px 12px;
     border: 1px solid var(--border); border-radius: 7px;
     font-size: 14px; font-family: var(--font-body);
     background: #fbfcfe;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
-  input:focus {
+  input:focus, select:focus {
     outline: none;
     border-color: var(--gold-500);
     background: #fff;
     box-shadow: 0 0 0 3px rgba(193, 137, 58, 0.16);
   }
   input::placeholder { color: #b6bfcc; }
+  .other-input { margin-top: 8px; }
+  .other-input[hidden] { display: none; }
 
   button {
     background: linear-gradient(180deg, var(--navy-800), var(--navy-900));
@@ -351,7 +353,14 @@
           </div>
           <div>
             <label>Workshop Name</label>
-            <input type="text" id="workshopName" required>
+            <select id="workshopName" class="event-title-select" data-other="workshopNameOther" required>
+              <option value="" disabled selected>Select event title</option>
+              <option>Two Days National Level FDP</option>
+              <option>Workshop</option>
+              <option>National Level Competition</option>
+              <option value="__other__">Other (type below)</option>
+            </select>
+            <input type="text" id="workshopNameOther" class="other-input" placeholder="Enter event title" hidden>
           </div>
           <div>
             <label>Workshop By</label>
@@ -360,6 +369,22 @@
           <div>
             <label>Workshop Date</label>
             <input type="date" id="workshopDate">
+          </div>
+          <div>
+            <label>Workshop End Date (optional)</label>
+            <input type="date" id="workshopEndDate">
+          </div>
+          <div class="full">
+            <label>Theme</label>
+            <input type="text" id="theme">
+          </div>
+          <div>
+            <label>Convener Name</label>
+            <input type="text" id="convenerName">
+          </div>
+          <div>
+            <label>Convener Title/Designation</label>
+            <input type="text" id="convenerTitle">
           </div>
           <div class="full">
             <button type="submit">Register Participant</button>
@@ -419,11 +444,30 @@
           </div>
           <div class="full">
             <label>Event Name</label>
-            <input type="text" id="eval-eventName" required>
+            <select id="eval-eventName" class="event-title-select" data-other="eval-eventNameOther" required>
+              <option value="" disabled selected>Select event title</option>
+              <option>Two Days National Level FDP</option>
+              <option>Workshop</option>
+              <option>National Level Competition</option>
+              <option value="__other__">Other (type below)</option>
+            </select>
+            <input type="text" id="eval-eventNameOther" class="other-input" placeholder="Enter event title" hidden>
           </div>
           <div class="full">
             <label>Workshop By</label>
             <input type="text" id="eval-workshopBy" required>
+          </div>
+          <div class="full">
+            <label>Theme</label>
+            <input type="text" id="eval-theme">
+          </div>
+          <div>
+            <label>Convener Name</label>
+            <input type="text" id="eval-convenerName">
+          </div>
+          <div>
+            <label>Convener Title/Designation</label>
+            <input type="text" id="eval-convenerTitle">
           </div>
           <div>
             <label>Evaluator Name</label>
@@ -439,7 +483,12 @@
           </div>
           <div>
             <label>Grade</label>
-            <input type="text" id="eval-grade" required placeholder="e.g. A, B+">
+            <select id="eval-grade" required>
+              <option value="" disabled selected>Select grade</option>
+              <option>A+</option>
+              <option>A</option>
+              <option>B</option>
+            </select>
           </div>
           <div class="full">
             <label>Written Comments</label>
@@ -495,6 +544,24 @@
       btn.classList.add("active");
       document.getElementById(btn.dataset.tab).classList.add("active");
     });
+  });
+
+  // Event-title dropdowns: "Other (type below)" reveals a free-text input.
+  function syncOtherInput(select) {
+    const other = document.getElementById(select.dataset.other);
+    const isOther = select.value === "__other__";
+    other.hidden = !isOther;
+    other.required = isOther;
+    if (!isOther) other.value = "";
+  }
+  function getEventTitle(selectId) {
+    const select = document.getElementById(selectId);
+    return select.value === "__other__"
+      ? document.getElementById(select.dataset.other).value.trim()
+      : select.value;
+  }
+  document.querySelectorAll(".event-title-select").forEach(select => {
+    select.addEventListener("change", () => syncOtherInput(select));
   });
 
   const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
@@ -608,13 +675,24 @@ async function requireAuth() {
     const errorEl = document.getElementById("register-error");
     errorEl.textContent = "";
 
+    const workshopDate = document.getElementById("workshopDate").value;
+    const workshopEndDate = document.getElementById("workshopEndDate").value;
+    if (workshopEndDate && workshopDate && workshopEndDate < workshopDate) {
+      errorEl.textContent = "Workshop End Date cannot be before Workshop Date.";
+      return;
+    }
+
     const payload = {
       name: document.getElementById("name").value,
       email: document.getElementById("email").value,
-      workshopName: document.getElementById("workshopName").value,
+      workshopName: getEventTitle("workshopName"),
       workshopBy: document.getElementById("workshopBy").value,
-      workshopDate: document.getElementById("workshopDate").value,
+      workshopDate,
+      theme: document.getElementById("theme").value,
+      convenerName: document.getElementById("convenerName").value,
+      convenerTitle: document.getElementById("convenerTitle").value,
     };
+    if (workshopEndDate) payload.workshopEndDate = workshopEndDate;
 
     try {
       const res = await fetch(API, {
@@ -625,6 +703,7 @@ async function requireAuth() {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Registration failed");
       e.target.reset();
+      syncOtherInput(document.getElementById("workshopName"));
       await loadParticipants();
     } catch (err) {
       errorEl.textContent = err.message;
@@ -680,8 +759,11 @@ async function requireAuth() {
     const payload = {
       participantName: document.getElementById("eval-participantName").value,
       email: document.getElementById("eval-email").value,
-      eventName: document.getElementById("eval-eventName").value,
+      eventName: getEventTitle("eval-eventName"),
       workshopBy: document.getElementById("eval-workshopBy").value,
+      theme: document.getElementById("eval-theme").value,
+      convenerName: document.getElementById("eval-convenerName").value,
+      convenerTitle: document.getElementById("eval-convenerTitle").value,
       evaluatorName: document.getElementById("eval-evaluatorName").value,
       evaluatorTitle: document.getElementById("eval-evaluatorTitle").value,
       marksTotal: parseInt(document.getElementById("eval-marksTotal").value) || null,
@@ -703,6 +785,7 @@ async function requireAuth() {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed to issue evaluation certificate");
       e.target.reset();
+      syncOtherInput(document.getElementById("eval-eventName"));
       await loadEvaluations();
     } catch (err) {
       errorEl.textContent = err.message;

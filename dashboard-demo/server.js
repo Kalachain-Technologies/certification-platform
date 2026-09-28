@@ -97,7 +97,10 @@ app.get("/api/participants", async (req, res) => {
 
 // Register a new participant (the "registration" step)
 app.post("/api/participants", async (req, res) => {
-  const { name, email, workshopName, workshopBy, workshopDate } = req.body;
+  const {
+    name, email, workshopName, workshopBy, workshopDate, workshopEndDate,
+    theme, convenerName, convenerTitle,
+  } = req.body;
   if (!name || !email || !workshopName || !workshopBy) {
     return res.status(400).json({ error: "name, email, workshopName, and workshopBy are required" });
   }
@@ -110,6 +113,10 @@ app.post("/api/participants", async (req, res) => {
       workshop_name: workshopName,
       workshop_by: workshopBy,
       workshop_date: workshopDate || null,
+      workshop_end_date: workshopEndDate || null,
+      theme: theme || null,
+      convener_name: convenerName || null,
+      convener_title: convenerTitle || null,
     }])
     .select();
   if (error) return res.status(500).json({ error: error.message });
@@ -188,7 +195,7 @@ app.get("/api/evaluations", async (req, res) => {
 app.post("/api/evaluations", async (req, res) => {
   const {
     participantId, participantName, email, eventName,
-    workshopBy,
+    workshopBy, theme, convenerName, convenerTitle,
     evaluatorName, evaluatorTitle, marksTotal, marksMax, grade,
     evaluationParameters, comments, audioFeedbackUrl,
   } = req.body;
@@ -209,6 +216,9 @@ app.post("/api/evaluations", async (req, res) => {
       wallet_address: getPlatformWalletAddress(),
       event_name: eventName,
       workshop_by: workshopBy,
+      theme: theme || null,
+      convener_name: convenerName || null,
+      convener_title: convenerTitle || null,
       evaluator_name: evaluatorName,
       evaluator_title: evaluatorTitle || "Evaluator",
       marks_total: marksTotal || null,

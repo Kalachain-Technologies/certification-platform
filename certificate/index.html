@@ -133,7 +133,7 @@
     font-size: 15.5px;
   }
   .name {
-    font-size: 32px;
+    font-size: 23px;
     font-weight: 700;
     color: var(--ink);
     border-bottom: 2px solid var(--gold);
@@ -202,6 +202,10 @@
   .signature-title {
     font-family: Arial, sans-serif; font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; letter-spacing: 0.2px;
   }
+  .organized-by {
+    font-family: Arial, sans-serif; font-size: 12px; color: var(--ink-soft); margin-top: 10px;
+  }
+  .organized-by strong { color: var(--ink); }
 
   .blockchain-footer {
     margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--card-border);
@@ -229,7 +233,7 @@
     .certificate-container { padding: 44px 32px 34px; min-height: auto; }
     .header { padding: 0 110px; }
     .brand-name { font-size: 21px; letter-spacing: 1.2px; }
-    .name { font-size: 27px; min-width: 200px; }
+    .name { font-size: 20px; min-width: 200px; }
     .course { font-size: 17px; }
   }
 
@@ -261,7 +265,7 @@
     .recipient-section { margin: 6px 0 20px; }
     .statement { font-size: 13px; }
     .name {
-      font-size: 21px;
+      font-size: 17px;
       min-width: 0;
       width: 100%;
       padding: 0 4px 5px;
@@ -283,6 +287,7 @@
     .signature-block { margin-top: 24px; padding-top: 10px; }
     .signature-name { font-size: 15px; min-width: 180px; }
     .signature-title { font-size: 10px; }
+    .organized-by { font-size: 10.5px; }
     .evaluator-card { padding: 14px 16px; gap: 14px; margin-bottom: 18px; }
     .evaluator-name { font-size: 14px; }
     .evaluator-title { font-size: 11px; margin-bottom: 8px; }
@@ -298,7 +303,7 @@
   @media (max-width: 360px) {
     .certificate-container { padding: 82px 14px 20px; }
     .brand-name { font-size: 14px; }
-    .name { font-size: 18px; }
+    .name { font-size: 15px; }
     .meta-grid { grid-template-columns: 1fr; }
   }
 </style>
@@ -332,6 +337,25 @@
     return found ? found.value : "";
   }
 
+  // Formats workshop_date / workshop_end_date (YYYY-MM-DD) as "12 October 2026"
+  // or a range like "12 – 14 October 2026". Parsed/formatted in UTC so the
+  // viewer's timezone can't shift the day.
+  function formatEventDates(start, end) {
+    if (!start) return "";
+    const s = new Date(String(start).slice(0, 10));
+    if (isNaN(s)) return "";
+    const fmt = (d, opts) => d.toLocaleDateString("en-GB", { timeZone: "UTC", ...opts });
+    const full = { day: "numeric", month: "long", year: "numeric" };
+    const e = end ? new Date(String(end).slice(0, 10)) : null;
+    if (!e || isNaN(e) || e.getTime() === s.getTime()) return fmt(s, full);
+    const sameYear = s.getUTCFullYear() === e.getUTCFullYear();
+    const sameMonth = sameYear && s.getUTCMonth() === e.getUTCMonth();
+    const startPart = sameMonth
+      ? fmt(s, { day: "numeric" })
+      : fmt(s, sameYear ? { day: "numeric", month: "long" } : full);
+    return `${startPart} – ${fmt(e, full)}`;
+  }
+
   function renderCertificate(row, isEvaluation) {
     const issueDate = row.created_at
       ? new Date(row.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
@@ -357,6 +381,26 @@
             ${row.audio_feedback_url ? `<div class="hash-line"><strong>Audio Feedback Reference:</strong><span class="hash-value">${escapeHtml(row.audio_feedback_url)}</span></div>` : ""}
         </div>
     </div>` : "";
+
+    const eventDates = formatEventDates(row.workshop_date, row.workshop_end_date);
+    const isDateRange = row.workshop_end_date && row.workshop_end_date !== row.workshop_date;
+    const eventDatesRow = eventDates ? `
+        <div class="meta-item">
+            <span class="meta-label">${isDateRange ? "Event Dates" : "Event Date"}</span>
+            <span class="meta-value">${escapeHtml(eventDates)}</span>
+        </div>` : "";
+
+    const themeRow = row.theme ? `
+        <div class="meta-item">
+            <span class="meta-label">Theme</span>
+            <span class="meta-value">${escapeHtml(row.theme)}</span>
+        </div>` : "";
+
+    // Old certificates have no convener -- fall back to the original signatory.
+    const convenerName = row.convener_name || "Dr. Nalini Kanukurthy";
+    const convenerTitle = row.convener_name
+      ? (row.convener_title || "")
+      : "Founder & Director, Kalachain Creative Technologies Pvt Ltd";
 
     const name = isEvaluation ? row.participant_name : row.name;
     const eventName = isEvaluation ? row.event_name : row.workshop_name;
@@ -387,6 +431,8 @@
 
     <div class="meta-grid">
         ${gradeRow}
+        ${themeRow}
+        ${eventDatesRow}
         <div class="meta-item">
             <span class="meta-label">Official Issue Date</span>
             <span class="meta-value">${issueDate}</span>
@@ -400,8 +446,9 @@
     ${voiceSection}
 
     <div class="signature-block">
-        <div class="signature-name">Dr. Nalini Kanukurthy</div>
-        <div class="signature-title">Founder &amp; Director, Kalachain Creative Technologies Pvt Ltd</div>
+        <div class="signature-name">${escapeHtml(convenerName)}</div>
+        ${convenerTitle ? `<div class="signature-title">${escapeHtml(convenerTitle)}</div>` : ""}
+        <div class="organized-by">Organized by: <strong>Kalachain Creative Technologies</strong></div>
     </div>
 
     <div class="blockchain-footer">
