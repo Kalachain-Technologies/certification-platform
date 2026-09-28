@@ -218,6 +218,8 @@
   input::placeholder { color: #b6bfcc; }
   .other-input { margin-top: 8px; }
   .other-input[hidden] { display: none; }
+  .inline-pair { display: flex; gap: 10px; }
+  .inline-pair select { width: auto; flex: none; }
 
   button {
     background: linear-gradient(180deg, var(--navy-800), var(--navy-900));
@@ -375,8 +377,14 @@
             <input type="date" id="workshopEndDate">
           </div>
           <div class="full">
-            <label>Theme</label>
-            <input type="text" id="theme">
+            <label>Theme / Title</label>
+            <div class="inline-pair">
+              <select id="themeLabel">
+                <option>Theme</option>
+                <option>Title</option>
+              </select>
+              <input type="text" id="theme">
+            </div>
           </div>
           <div>
             <label>Convener Name</label>
@@ -458,8 +466,14 @@
             <input type="text" id="eval-workshopBy" required>
           </div>
           <div class="full">
-            <label>Theme</label>
-            <input type="text" id="eval-theme">
+            <label>Theme / Title</label>
+            <div class="inline-pair">
+              <select id="eval-themeLabel">
+                <option>Theme</option>
+                <option>Title</option>
+              </select>
+              <input type="text" id="eval-theme">
+            </div>
           </div>
           <div>
             <label>Convener Name</label>
@@ -689,6 +703,7 @@ async function requireAuth() {
       workshopBy: document.getElementById("workshopBy").value,
       workshopDate,
       theme: document.getElementById("theme").value,
+      themeLabel: document.getElementById("themeLabel").value,
       convenerName: document.getElementById("convenerName").value,
       convenerTitle: document.getElementById("convenerTitle").value,
     };
@@ -762,6 +777,7 @@ async function requireAuth() {
       eventName: getEventTitle("eval-eventName"),
       workshopBy: document.getElementById("eval-workshopBy").value,
       theme: document.getElementById("eval-theme").value,
+      themeLabel: document.getElementById("eval-themeLabel").value,
       convenerName: document.getElementById("eval-convenerName").value,
       convenerTitle: document.getElementById("eval-convenerTitle").value,
       evaluatorName: document.getElementById("eval-evaluatorName").value,

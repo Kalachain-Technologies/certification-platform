@@ -99,7 +99,7 @@ app.get("/api/participants", async (req, res) => {
 app.post("/api/participants", async (req, res) => {
   const {
     name, email, workshopName, workshopBy, workshopDate, workshopEndDate,
-    theme, convenerName, convenerTitle,
+    theme, themeLabel, convenerName, convenerTitle,
   } = req.body;
   if (!name || !email || !workshopName || !workshopBy) {
     return res.status(400).json({ error: "name, email, workshopName, and workshopBy are required" });
@@ -115,6 +115,7 @@ app.post("/api/participants", async (req, res) => {
       workshop_date: workshopDate || null,
       workshop_end_date: workshopEndDate || null,
       theme: theme || null,
+      theme_label: theme ? (themeLabel || "Theme") : null,
       convener_name: convenerName || null,
       convener_title: convenerTitle || null,
     }])
@@ -195,7 +196,7 @@ app.get("/api/evaluations", async (req, res) => {
 app.post("/api/evaluations", async (req, res) => {
   const {
     participantId, participantName, email, eventName,
-    workshopBy, theme, convenerName, convenerTitle,
+    workshopBy, theme, themeLabel, convenerName, convenerTitle,
     evaluatorName, evaluatorTitle, marksTotal, marksMax, grade,
     evaluationParameters, comments, audioFeedbackUrl,
   } = req.body;
@@ -217,6 +218,7 @@ app.post("/api/evaluations", async (req, res) => {
       event_name: eventName,
       workshop_by: workshopBy,
       theme: theme || null,
+      theme_label: theme ? (themeLabel || "Theme") : null,
       convener_name: convenerName || null,
       convener_title: convenerTitle || null,
       evaluator_name: evaluatorName,
