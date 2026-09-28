@@ -133,18 +133,18 @@
     font-size: 15.5px;
   }
   .name {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--ink);
     border-bottom: 2px solid var(--gold);
     display: inline-block;
-    padding: 0 10px 6px;
-    margin-bottom: 14px;
+    padding: 0 24px 6px;
+    margin-bottom: 8px;
     letter-spacing: 0.5px;
-    min-width: 260px;
+    min-width: 180px;
   }
   .course {
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--ink);
     margin: 4px 0;
@@ -196,7 +196,7 @@
     font-family: Georgia, 'Times New Roman', serif;
   }
   .signature-name {
-    font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: 0.3px;
+    font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: 0.3px;
     border-top: 1px solid var(--card-border); display: inline-block; padding-top: 8px; min-width: 260px;
   }
   .signature-title {
@@ -210,7 +210,7 @@
   }
   .organized-by strong { color: var(--ink); }
   .founder-name {
-    font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: 0.3px; margin-top: 10px;
+    font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: 0.3px; margin-top: 10px;
   }
 
   .blockchain-footer {
@@ -239,8 +239,8 @@
     .certificate-container { padding: 44px 32px 34px; min-height: auto; }
     .header { padding: 0 110px; }
     .brand-name { font-size: 21px; letter-spacing: 1.2px; }
-    .name { font-size: 16px; min-width: 200px; }
-    .course { font-size: 17px; }
+    .name { font-size: 19px; }
+    .course { font-size: 16px; }
   }
 
   /* Mobile phones */
@@ -271,13 +271,13 @@
     .recipient-section { margin: 6px 0 20px; }
     .statement { font-size: 13px; }
     .name {
-      font-size: 12.5px;
+      font-size: 16px;
       min-width: 0;
       width: 100%;
       padding: 0 4px 5px;
       word-break: break-word;
     }
-    .course { font-size: 15px; }
+    .course { font-size: 14px; }
 
     .meta-grid {
       grid-template-columns: 1fr 1fr;
@@ -291,7 +291,7 @@
     .section-title { font-size: 10.5px; }
     .section-subtitle { font-size: 9px; margin-bottom: 12px; }
     .signature-block { margin-top: 24px; padding-top: 10px; }
-    .signature-name { font-size: 15px; min-width: 180px; }
+    .signature-name { font-size: 14px; min-width: 180px; }
     .signature-title { font-size: 10px; }
     .organized-by { font-size: 10.5px; }
     .signature-divider { margin: 14px auto 10px; }
@@ -311,7 +311,7 @@
   @media (max-width: 360px) {
     .certificate-container { padding: 82px 14px 20px; }
     .brand-name { font-size: 14px; }
-    .name { font-size: 12.5px; }
+    .name { font-size: 15px; }
     .meta-grid { grid-template-columns: 1fr; }
   }
 </style>
@@ -352,15 +352,17 @@
     if (!start) return "";
     const s = new Date(String(start).slice(0, 10));
     if (isNaN(s)) return "";
-    const fmt = (d, opts) => d.toLocaleDateString("en-GB", { timeZone: "UTC", ...opts });
+    // en-US to match the "Official Issue Date" style (e.g. "September 28, 2026").
+    const fmt = (d, opts) => d.toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
     const full = { day: "numeric", month: "long", year: "numeric" };
     const e = end ? new Date(String(end).slice(0, 10)) : null;
     if (!e || isNaN(e) || e.getTime() === s.getTime()) return fmt(s, full);
     const sameYear = s.getUTCFullYear() === e.getUTCFullYear();
     const sameMonth = sameYear && s.getUTCMonth() === e.getUTCMonth();
-    const startPart = sameMonth
-      ? fmt(s, { day: "numeric" })
-      : fmt(s, sameYear ? { day: "numeric", month: "long" } : full);
+    if (sameMonth) {
+      return `${fmt(s, { month: "long", day: "numeric" })} – ${e.getUTCDate()}, ${e.getUTCFullYear()}`;
+    }
+    const startPart = fmt(s, sameYear ? { month: "long", day: "numeric" } : full);
     return `${startPart} – ${fmt(e, full)}`;
   }
 
