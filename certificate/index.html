@@ -212,7 +212,8 @@
     font-size: 12px; color: var(--ink-soft); text-align: center; position: relative; z-index: 1;
     font-family: Arial, sans-serif;
   }
-  .hosted-by { margin-bottom: 12px; }
+  .hosted-by { margin-bottom: 4px; }
+  .hosted-by + .footer-row { margin-top: 12px; }
   .hosted-by strong { color: var(--ink); }
   .footer-row { margin-bottom: 8px; }
   .tx-label { font-weight: 600; margin-bottom: 5px; }
@@ -453,6 +454,7 @@
 
     <div class="blockchain-footer">
         <div class="hosted-by">Hosted by: <strong>Kalachain Creative Technologies</strong></div>
+        <div class="hosted-by">Founder / Director: <strong>Dr. Nalini Kanukurthy</strong></div>
         <div class="footer-row"><strong>Status:</strong> Permanently Witnessed</div>
         <div class="tx-label">On-Chain Transaction Hash:</div>
         <span class="tx-hash">${escapeHtml(row.tx_hash || "")}</span>
