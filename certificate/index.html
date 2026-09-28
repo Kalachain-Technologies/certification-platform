@@ -245,9 +245,11 @@
 
   /* Mobile phones */
   @media (max-width: 640px) {
-    body { padding: 10px; }
+    /* Start at the top instead of vertically centering, which left a big
+       empty band above the certificate on phones. */
+    body { padding: 10px; align-items: flex-start; }
     .certificate-container {
-      padding: 90px 20px 26px;
+      padding: 92px 20px 26px;
       border-width: 2px;
     }
     .certificate-container::before { inset: 7px; }
@@ -262,48 +264,48 @@
       width: 64px;
       height: 64px;
     }
-    .header { padding: 0; margin-bottom: 14px; gap: 1px; }
-    .brand-name { font-size: 16px; letter-spacing: 0.5px; line-height: 1.3; }
-    .workshop-by { font-size: 12.5px; margin: 8px 0 2px; }
-    .cert-title { font-size: 13px; letter-spacing: 3px; }
-    .title-rule { width: 60px; margin-top: 8px; }
+    .header { padding: 0; margin-bottom: 18px; gap: 4px; }
+    .brand-name { font-size: 16px; letter-spacing: 0.5px; line-height: 1.3; margin-bottom: 4px; }
+    .workshop-by { font-size: 13px; margin: 8px 0 2px; }
+    .cert-title { font-size: 12px; letter-spacing: 2.5px; }
+    .title-rule { width: 60px; margin-top: 10px; }
 
-    .recipient-section { margin: 6px 0 20px; }
-    .statement { font-size: 13px; }
+    .recipient-section { margin: 6px 0 22px; }
+    .statement { font-size: 13px; line-height: 1.45; }
     .name {
-      font-size: 16px;
-      min-width: 0;
-      width: 100%;
-      padding: 0 4px 5px;
+      font-size: 18px;
+      min-width: 140px;
+      max-width: 100%;
+      padding: 0 16px 5px;
       word-break: break-word;
     }
-    .course { font-size: 14px; }
+    .course { font-size: 15px; }
 
     .meta-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 14px;
-      padding: 12px 14px;
-      margin-bottom: 22px;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 14px 16px;
+      margin-bottom: 26px;
     }
-    .meta-label { font-size: 9px; }
-    .meta-value { font-size: 13px; }
+    .meta-label { font-size: 9.5px; letter-spacing: 0.6px; }
+    .meta-value { font-size: 13.5px; }
 
-    .section-title { font-size: 10.5px; }
-    .section-subtitle { font-size: 9px; margin-bottom: 12px; }
+    .section-title { font-size: 11px; }
+    .section-subtitle { font-size: 9.5px; margin-bottom: 12px; }
     .signature-block { margin-top: 4px; padding-top: 0; }
-    .signature-name { font-size: 14px; min-width: 180px; }
-    .signature-title { font-size: 10px; }
-    .organized-by { font-size: 10.5px; }
+    .signature-name { font-size: 15px; min-width: 180px; }
+    .signature-title { font-size: 11px; }
+    .organized-by { font-size: 11.5px; line-height: 1.5; }
     .signature-divider { margin: 14px auto 10px; }
-    .founder-name { font-size: 14px; }
-    .evaluator-card { padding: 14px 16px; gap: 14px; margin-bottom: 18px; }
+    .founder-name { font-size: 15px; }
+    .evaluator-card { padding: 14px 16px; gap: 14px; margin-bottom: 22px; }
     .evaluator-name { font-size: 14px; }
     .evaluator-title { font-size: 11px; margin-bottom: 8px; }
     .evaluator-right, .evaluator-left { flex: 1 1 100%; min-width: 0; }
     .transcript-box { font-size: 12.5px; padding: 10px 12px; }
     .hash-value { font-size: 9.5px; }
 
-    .blockchain-footer { margin-top: 20px; padding-top: 14px; font-size: 11px; }
+    .blockchain-footer { margin-top: 22px; padding-top: 16px; font-size: 11.5px; }
     .tx-hash { font-size: 10px; padding: 7px 10px; }
   }
 
@@ -311,7 +313,8 @@
   @media (max-width: 360px) {
     .certificate-container { padding: 82px 14px 20px; }
     .brand-name { font-size: 14px; }
-    .name { font-size: 15px; }
+    .cert-title { font-size: 11px; letter-spacing: 1.5px; }
+    .name { font-size: 16px; }
     .meta-grid { grid-template-columns: 1fr; }
   }
 </style>
