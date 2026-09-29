@@ -329,6 +329,8 @@
     <button class="tab-btn" data-tab="tab-list-p1">Participants — Phase 1</button>
     <button class="tab-btn" data-tab="tab-register-p2">Add Evaluation — Phase 2</button>
     <button class="tab-btn" data-tab="tab-list-p2">Participants — Phase 2</button>
+    <button class="tab-btn" data-tab="tab-register-rp">Add Resource Person</button>
+    <button class="tab-btn" data-tab="tab-list-rp">Resource Persons</button>
   </div>
 
   <div class="page">
@@ -365,11 +367,11 @@
             <input type="text" id="workshopNameOther" class="other-input" placeholder="Enter event title" hidden>
           </div>
           <div class="full">
-            <label>Workshop By / Resource Person</label>
+            <label>Resource Person</label>
             <div class="inline-pair">
               <select id="workshopByLabel">
-                <option>Workshop by</option>
                 <option>Resource Person</option>
+                <option>Chief Resource Person</option>
               </select>
               <input type="text" id="workshopBy" required>
             </div>
@@ -468,11 +470,11 @@
             <input type="text" id="eval-eventNameOther" class="other-input" placeholder="Enter event title" hidden>
           </div>
           <div class="full">
-            <label>Workshop By / Resource Person</label>
+            <label>Resource Person</label>
             <div class="inline-pair">
               <select id="eval-workshopByLabel">
-                <option>Workshop by</option>
                 <option>Resource Person</option>
+                <option>Chief Resource Person</option>
               </select>
               <input type="text" id="eval-workshopBy" required>
             </div>
@@ -553,6 +555,104 @@
             </tr>
           </thead>
           <tbody id="evaluations-body">
+            <tr><td colspan="4" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-section" id="tab-register-rp">
+      <div class="phase-heading">
+        <div>
+          <h2>Resource Person Appreciation</h2>
+          <div class="phase-sub">Issue a Certificate of Appreciation to a resource person or convener, minted immediately</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><span class="dot"></span>Issue Appreciation Certificate</h3>
+        <form id="resource-person-form">
+          <div class="full">
+            <label>Full Name</label>
+            <div class="inline-pair">
+              <select id="rp-salutation">
+                <option>Dr.</option>
+                <option>Prof.</option>
+                <option>Mr.</option>
+                <option>Ms.</option>
+                <option>Mrs.</option>
+                <option value="">(none)</option>
+              </select>
+              <input type="text" id="rp-name" required>
+            </div>
+          </div>
+          <div>
+            <label>Email</label>
+            <input type="email" id="rp-email" required>
+          </div>
+          <div>
+            <label>Role</label>
+            <select id="rp-role">
+              <option>Resource Person</option>
+              <option>Chief Resource Person</option>
+              <option>Convener</option>
+            </select>
+          </div>
+          <div class="full">
+            <label>Programme Name</label>
+            <select id="rp-programmeName" class="event-title-select" data-other="rp-programmeNameOther" required>
+              <option value="" disabled selected>Select event title</option>
+              <option>Two Days National Level FDP</option>
+              <option>Workshop</option>
+              <option>National Level Competition</option>
+              <option value="__other__">Other (type below)</option>
+            </select>
+            <input type="text" id="rp-programmeNameOther" class="other-input" placeholder="Enter event title" hidden>
+          </div>
+          <div class="full">
+            <label>Programme Title</label>
+            <input type="text" id="rp-programmeTitle" placeholder="Shown in quotes on the certificate">
+          </div>
+          <div>
+            <label>Programme Date</label>
+            <input type="date" id="rp-programmeDate">
+          </div>
+          <div>
+            <label>Programme End Date (optional)</label>
+            <input type="date" id="rp-programmeEndDate">
+          </div>
+          <div class="full">
+            <label>Audio Feedback URL (IPFS/Pinata link)</label>
+            <input type="text" id="rp-audioUrl" placeholder="https://gateway.pinata.cloud/ipfs/...">
+          </div>
+          <div class="full">
+            <button type="submit">Issue Appreciation Certificate</button>
+          </div>
+        </form>
+        <div class="error-msg" id="resource-person-error"></div>
+      </div>
+    </div>
+
+    <div class="tab-section" id="tab-list-rp">
+      <div class="phase-heading">
+        <div>
+          <h2>Resource Persons</h2>
+          <div class="phase-sub">Appreciation certificates, minted on issue</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><span class="dot"></span>Appreciation Certificates</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Programme</th>
+              <th>Role</th>
+              <th>Certificate</th>
+            </tr>
+          </thead>
+          <tbody id="resource-persons-body">
             <tr><td colspan="4" class="empty-state">Loading...</td></tr>
           </tbody>
         </table>
@@ -827,6 +927,95 @@ async function requireAuth() {
 
   loadEvaluations();
   setInterval(loadEvaluations, 5000);
+
+  const RP_API = "/api/resource-persons";
+
+  async function loadResourcePersons() {
+    const res = await fetch(RP_API);
+    const data = await res.json();
+    renderResourcePersonsTable(data);
+  }
+
+  function renderResourcePersonsTable(rows) {
+    const body = document.getElementById("resource-persons-body");
+    if (!rows.length) {
+      body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="hex-lg"></div>No appreciation certificates yet — issue one above.</div></td></tr>`;
+      return;
+    }
+    body.innerHTML = rows.map(r => {
+      let certCell;
+      if (r.certificate_status === "Issued") {
+        const certUrl = `https://kalachain-technologies.github.io/certification-platform/certificate/?id=${r.tx_hash}`;
+        certCell = `
+          <div class="cert-cell-stack">
+            <span class="seal-badge issued"><span class="hex"></span>Issued</span>
+            <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a>
+            <a class="cert-link" href="${r.verification_link}" target="_blank" style="color: var(--muted);">View Transaction →</a>
+            <span class="tx-hash">${r.tx_hash}</span>
+          </div>`;
+      } else {
+        certCell = `<span class="seal-badge minting"><span class="hex"></span>Processing…</span>`;
+      }
+      const fullName = [r.salutation, r.name].filter(Boolean).join(" ");
+      return `
+        <tr>
+          <td data-label="Name" class="name-cell">${escapeHtml(fullName)}</td>
+          <td data-label="Programme">${escapeHtml(r.programme_name)}${r.programme_title ? `<span class="sub">${escapeHtml(r.programme_title)}</span>` : ""}</td>
+          <td data-label="Role">${escapeHtml(r.role)}</td>
+          <td data-label="Certificate">${certCell}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  document.getElementById("resource-person-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("resource-person-error");
+    errorEl.textContent = "";
+
+    const programmeDate = document.getElementById("rp-programmeDate").value;
+    const programmeEndDate = document.getElementById("rp-programmeEndDate").value;
+    if (programmeEndDate && programmeDate && programmeEndDate < programmeDate) {
+      errorEl.textContent = "Programme End Date cannot be before Programme Date.";
+      return;
+    }
+
+    const payload = {
+      salutation: document.getElementById("rp-salutation").value,
+      name: document.getElementById("rp-name").value,
+      email: document.getElementById("rp-email").value,
+      role: document.getElementById("rp-role").value,
+      programmeName: getEventTitle("rp-programmeName"),
+      programmeTitle: document.getElementById("rp-programmeTitle").value,
+      programmeDate,
+      programmeEndDate,
+      audioFeedbackUrl: document.getElementById("rp-audioUrl").value,
+    };
+
+    const submitBtn = e.target.querySelector("button");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Issuing & Minting...";
+
+    try {
+      const res = await fetch(RP_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to issue appreciation certificate");
+      e.target.reset();
+      syncOtherInput(document.getElementById("rp-programmeName"));
+      await loadResourcePersons();
+    } catch (err) {
+      errorEl.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Issue Appreciation Certificate";
+    }
+  });
+
+  loadResourcePersons();
+  setInterval(loadResourcePersons, 5000);
   })();
 </script>
 </body>

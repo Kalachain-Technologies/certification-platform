@@ -1,4 +1,4 @@
--- Run this once in the Supabase SQL editor before using the "Workshop by / Resource Person" dropdown.
+-- Run this once in the Supabase SQL editor before using the "Resource Person / Chief Resource Person" dropdown.
 alter table public.participants
   add column if not exists workshop_by_label text;
 

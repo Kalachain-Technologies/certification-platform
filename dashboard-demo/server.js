@@ -112,7 +112,7 @@ app.post("/api/participants", async (req, res) => {
       wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
       workshop_by: workshopBy,
-      workshop_by_label: workshopByLabel === "Resource Person" ? "Resource Person" : "Workshop by",
+      workshop_by_label: workshopByLabel === "Chief Resource Person" ? "Chief Resource Person" : "Resource Person",
       workshop_date: workshopDate || null,
       workshop_end_date: workshopEndDate || null,
       theme: theme || null,
@@ -218,7 +218,7 @@ app.post("/api/evaluations", async (req, res) => {
       wallet_address: getPlatformWalletAddress(),
       event_name: eventName,
       workshop_by: workshopBy,
-      workshop_by_label: workshopByLabel === "Resource Person" ? "Resource Person" : "Workshop by",
+      workshop_by_label: workshopByLabel === "Chief Resource Person" ? "Chief Resource Person" : "Resource Person",
       theme: theme || null,
       theme_label: theme ? (themeLabel || "Theme") : null,
       convener_name: convenerName || null,
@@ -275,6 +275,96 @@ app.post("/api/evaluations", async (req, res) => {
   }
 });
 
+// --- Resource Person routes (Certificate of Appreciation) ---
+
+const RESOURCE_PERSON_ROLES = ["Resource Person", "Chief Resource Person", "Convener"];
+const SALUTATIONS = ["Dr.", "Prof.", "Mr.", "Ms.", "Mrs."];
+
+// List all resource person certificates
+app.get("/api/resource-persons", async (req, res) => {
+  const { data, error } = await supabase
+    .from("resource_persons")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// Save a resource person AND mint their appreciation certificate in one
+// action -- same one-click flow as Phase 2 evaluations.
+app.post("/api/resource-persons", async (req, res) => {
+  const {
+    salutation, name, email, role, programmeName, programmeTitle,
+    programmeDate, programmeEndDate, audioFeedbackUrl,
+  } = req.body;
+
+  if (!name || !email || !programmeName) {
+    return res.status(400).json({ error: "name, email, and programmeName are required" });
+  }
+  if (programmeEndDate && programmeDate && programmeEndDate < programmeDate) {
+    return res.status(400).json({ error: "Programme end date cannot be before the start date" });
+  }
+
+  // 1. Save the record first
+  const { data: inserted, error: insertErr } = await supabase
+    .from("resource_persons")
+    .insert([{
+      salutation: SALUTATIONS.includes(salutation) ? salutation : null,
+      name,
+      email,
+      role: RESOURCE_PERSON_ROLES.includes(role) ? role : "Resource Person",
+      programme_name: programmeName,
+      programme_title: programmeTitle || null,
+      programme_date: programmeDate || null,
+      programme_end_date: programmeEndDate || null,
+      audio_feedback_url: audioFeedbackUrl || "",
+      wallet_address: getPlatformWalletAddress(),
+    }])
+    .select();
+  if (insertErr) return res.status(500).json({ error: insertErr.message });
+  const record = inserted[0];
+
+  // 2. Mint automatically. The deployed contract only has PARTICIPATION and
+  // EVALUATION kinds; appreciation certificates use PARTICIPATION (ungraded).
+  try {
+    const contractInstance = getContract();
+    const fullName = [record.salutation, record.name].filter(Boolean).join(" ");
+    const tx = await contractInstance.issueCertificate(
+      record.wallet_address,
+      0, // CertKind.PARTICIPATION
+      fullName,
+      `${record.role}: ${record.programme_name}`,
+      ""
+    );
+    const receipt = await tx.wait();
+
+    const parsedLogs = receipt.logs.map((log) => {
+      try { return contractInstance.interface.parseLog(log); } catch { return null; }
+    });
+    const event = parsedLogs.find((e) => e && e.name === "CertificateIssued");
+    const tokenId = event ? event.args.tokenId.toString() : null;
+    const verificationLink = buildVerificationLink(tx.hash);
+
+    // 3. Write the result back so the dashboard shows it live
+    const { data: final, error: finalErr } = await supabase
+      .from("resource_persons")
+      .update({
+        certificate_status: "Issued",
+        token_id: tokenId,
+        tx_hash: tx.hash,
+        verification_link: verificationLink,
+      })
+      .eq("id", record.id)
+      .select();
+    if (finalErr) return res.status(500).json({ error: finalErr.message });
+
+    res.json({ success: true, resourcePerson: final[0] });
+  } catch (mintErr) {
+    console.error("Resource person minting failed:", mintErr.message);
+    res.status(500).json({ error: `Saved, but minting failed: ${mintErr.message}` });
+  }
+});
+
 // Bulk-add participants from an uploaded Excel file. Every row is inserted
 // as approval_status = "Pending" -- deliberately NOT auto-approved. Uploading
 // a spreadsheet only gets people INTO the system; an admin still has to
@@ -319,12 +409,15 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
     const name = getField(row, "Name", "Full Name", "Participant Name");
     const email = getField(row, "Email", "Email Address");
     const workshopName = getField(row, "Workshop Name", "Workshop", "Event Name");
-    const workshopBy = getField(row, "Workshop By", "Workshop by", "Instructor", "Host");
-    const workshopByLabel = getField(row, "Workshop By Label", "Workshop by Label", "Workshop By Type");
+    const chiefResourcePerson = getField(row, "Chief Resource Person");
+    const workshopBy = chiefResourcePerson || getField(row, "Resource Person", "Workshop By", "Instructor", "Host");
+    const workshopByLabel = chiefResourcePerson
+      ? "Chief Resource Person"
+      : getField(row, "Resource Person Type", "Workshop By Label", "Workshop By Type");
     const workshopDate = getField(row, "Workshop Date", "Date");
 
     if (!name || !email || !workshopName || !workshopBy) {
-      skipped.push({ row: i + 2, reason: "Missing required field(s): Name, Email, Workshop Name, or Workshop By" });
+      skipped.push({ row: i + 2, reason: "Missing required field(s): Name, Email, Workshop Name, or Resource Person" });
       return;
     }
 
@@ -334,7 +427,7 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
       wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
       workshop_by: workshopBy,
-      workshop_by_label: workshopByLabel === "Resource Person" ? "Resource Person" : "Workshop by",
+      workshop_by_label: workshopByLabel === "Chief Resource Person" ? "Chief Resource Person" : "Resource Person",
       workshop_date: workshopDate || null,
       // approval_status and certificate_status default to Pending/NotIssued
       // via the table's own column defaults -- not set here on purpose.
@@ -343,7 +436,7 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
 
   if (!toInsert.length) {
     return res.status(400).json({
-      error: "No valid rows found. Make sure your spreadsheet has Name, Email, Workshop Name, and Workshop By columns.",
+      error: "No valid rows found. Make sure your spreadsheet has Name, Email, Workshop Name, and Resource Person columns.",
       skipped,
     });
   }

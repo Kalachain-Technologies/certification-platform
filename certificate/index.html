@@ -228,6 +228,31 @@
   }
   .verify-link { color: var(--gold); text-decoration: none; font-weight: 700; }
 
+  /* Certificate of Appreciation (resource persons) */
+  .appreciation .recipient-section { margin-bottom: 22px; }
+  .appreciation .statement { margin: 6px 0; }
+  .role-line { font-size: 15.5px; color: var(--ink-soft); font-style: italic; margin: 6px 0; }
+  .role-line strong { font-style: normal; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; }
+  .appreciation-note {
+    max-width: 680px; margin: 16px auto 0; font-size: 14.5px; line-height: 1.6;
+    color: var(--ink-soft); font-style: italic;
+  }
+  .audio-card {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px;
+    padding: 16px 20px; margin-bottom: 26px; text-align: center; position: relative; z-index: 1;
+  }
+  .audio-card .audio-player { max-width: 320px; margin: 4px auto 10px; display: block; }
+  .credential-note { text-align: center; margin-bottom: 22px; position: relative; z-index: 1; font-family: Arial, sans-serif; }
+  .credential-note strong { display: block; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-deep); }
+  .credential-note span { font-size: 12px; color: var(--ink-soft); }
+  .for-company { font-family: Arial, sans-serif; font-size: 12px; color: var(--ink-soft); }
+
+  @media (max-width: 640px) {
+    .role-line { font-size: 13px; }
+    .appreciation-note { font-size: 13px; }
+    .audio-card { padding: 12px 14px; margin-bottom: 22px; }
+  }
+
   .state-message { text-align: center; color: var(--ink-soft); font-size: 16px; padding: 60px 20px; font-family: Arial, sans-serif; }
   .state-message.error { color: #a13a3a; }
 
@@ -431,7 +456,7 @@
 
       <div>
         <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Participation"}</p>
-        <p class="workshop-by">${row.workshop_by_label === "Resource Person" ? "Resource Person:" : "Workshop by"} ${escapeHtml(row.workshop_by || "Dr. Urvashi Mohinani")}</p>
+        <p class="workshop-by">${row.workshop_by_label === "Chief Resource Person" ? "Chief Resource Person" : "Resource Person"}: ${escapeHtml(row.workshop_by || "Dr. Urvashi Mohinani")}</p>
         <div class="title-rule"></div>
       </div>
     </div>
@@ -475,6 +500,90 @@
     `;
   }
 
+  function renderAppreciationCertificate(row) {
+    const fullName = [row.salutation, row.name].filter(Boolean).join(" ");
+    const role = row.role || "Resource Person";
+    const programmeDates = formatEventDates(row.programme_date, row.programme_end_date);
+    const heldOn = programmeDates || (row.created_at
+      ? new Date(row.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+      : "");
+    const audioUrl = /^https?:\/\//i.test(row.audio_feedback_url || "") ? row.audio_feedback_url : "";
+
+    const audioSection = audioUrl ? `
+    <p class="section-title">Audio Feedback</p>
+    <p class="section-subtitle">(On-Chain Record)</p>
+    <div class="audio-card">
+        <audio class="audio-player" controls preload="none" src="${escapeHtml(audioUrl)}"></audio>
+        <div class="hash-line"><strong>Audio Feedback URL:</strong><span class="hash-value">${escapeHtml(audioUrl)}</span></div>
+    </div>` : "";
+
+    const root = document.getElementById("certificate-root");
+    root.classList.add("appreciation");
+    root.innerHTML = `
+    <div class="logo-badge">
+      <img src="kalachain-logo.jpeg" alt="Kalachain logo">
+    </div>
+
+    <div class="header">
+      <h2 class="brand-name">Kalachain Creative Technologies Pvt. Ltd.</h2>
+      <div>
+        <p class="cert-title">Certificate of Appreciation</p>
+        <div class="title-rule"></div>
+      </div>
+    </div>
+
+    <div class="recipient-section">
+        <p class="statement">This certificate is proudly presented to</p>
+        <div class="name">${escapeHtml(fullName)}</div>
+        <p class="role-line">for serving as the <strong>${escapeHtml(role)}</strong></p>
+        <p class="statement">for the programme</p>
+        <p class="course">&ldquo;${escapeHtml(row.programme_title || row.programme_name || "")}&rdquo;</p>
+        <p class="statement">organised by Kalachain Creative Technologies Pvt. Ltd.</p>
+        ${heldOn ? `<p class="statement">held on ${escapeHtml(heldOn)}</p>` : ""}
+        <p class="appreciation-note">Your valuable expertise, knowledge and contribution have enriched the learning experience of the participants and contributed to the successful conduct of the programme.</p>
+    </div>
+
+    ${audioSection}
+
+    <div class="meta-grid">
+        <div class="meta-item">
+            <span class="meta-label">Programme</span>
+            <span class="meta-value">${escapeHtml(row.programme_name || "")}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Role</span>
+            <span class="meta-value">${escapeHtml(role)}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Date</span>
+            <span class="meta-value">${escapeHtml(heldOn)}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Certificate ID</span>
+            <span class="meta-value">Token #${escapeHtml(String(row.token_id || ""))}</span>
+        </div>
+    </div>
+
+    <div class="credential-note">
+        <strong>Digitally Authenticated Credential</strong>
+        <span>Blockchain-enabled certificate issued through Kalachain</span>
+    </div>
+
+    <div class="signature-block">
+        <div class="for-company">For Kalachain Creative Technologies Pvt. Ltd.</div>
+        <div class="founder-name">Dr. Nalini Kanukurthy</div>
+        <div class="signature-title">Founder &amp; Director</div>
+    </div>
+
+    <div class="blockchain-footer">
+        <div class="footer-row"><strong>Status:</strong> Permanently Witnessed</div>
+        <div class="tx-label">On-Chain Transaction Hash:</div>
+        <span class="tx-hash">${escapeHtml(row.tx_hash || "")}</span>
+        <a href="${escapeHtml(row.verification_link || "")}" class="verify-link">Verify on PolygonScan &rarr;</a>
+    </div>
+    `;
+  }
+
   async function fetchFromTable(table, txHash) {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/${table}?tx_hash=eq.${encodeURIComponent(txHash)}&select=*`,
@@ -496,12 +605,16 @@
       return;
     }
     try {
-      const [participantRows, evaluationRows] = await Promise.all([
+      const [participantRows, evaluationRows, resourcePersonRows] = await Promise.all([
         fetchFromTable("participants", txHash),
         fetchFromTable("evaluations", txHash),
+        // Tolerate the table not existing yet so older certificates still load.
+        fetchFromTable("resource_persons", txHash).catch(() => []),
       ]);
 
-      if (evaluationRows.length) {
+      if (resourcePersonRows.length) {
+        renderAppreciationCertificate(resourcePersonRows[0]);
+      } else if (evaluationRows.length) {
         renderCertificate(evaluationRows[0], true);
       } else if (participantRows.length) {
         renderCertificate(participantRows[0], false);
