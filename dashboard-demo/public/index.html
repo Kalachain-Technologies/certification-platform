@@ -364,9 +364,15 @@
             </select>
             <input type="text" id="workshopNameOther" class="other-input" placeholder="Enter event title" hidden>
           </div>
-          <div>
-            <label>Workshop By</label>
-            <input type="text" id="workshopBy" required>
+          <div class="full">
+            <label>Workshop By / Resource Person</label>
+            <div class="inline-pair">
+              <select id="workshopByLabel">
+                <option>Workshop by</option>
+                <option>Resource Person</option>
+              </select>
+              <input type="text" id="workshopBy" required>
+            </div>
           </div>
           <div>
             <label>Workshop Date</label>
@@ -462,8 +468,14 @@
             <input type="text" id="eval-eventNameOther" class="other-input" placeholder="Enter event title" hidden>
           </div>
           <div class="full">
-            <label>Workshop By</label>
-            <input type="text" id="eval-workshopBy" required>
+            <label>Workshop By / Resource Person</label>
+            <div class="inline-pair">
+              <select id="eval-workshopByLabel">
+                <option>Workshop by</option>
+                <option>Resource Person</option>
+              </select>
+              <input type="text" id="eval-workshopBy" required>
+            </div>
           </div>
           <div class="full">
             <label>Theme / Title</label>
@@ -701,6 +713,7 @@ async function requireAuth() {
       email: document.getElementById("email").value,
       workshopName: getEventTitle("workshopName"),
       workshopBy: document.getElementById("workshopBy").value,
+      workshopByLabel: document.getElementById("workshopByLabel").value,
       workshopDate,
       theme: document.getElementById("theme").value,
       themeLabel: document.getElementById("themeLabel").value,
@@ -776,6 +789,7 @@ async function requireAuth() {
       email: document.getElementById("eval-email").value,
       eventName: getEventTitle("eval-eventName"),
       workshopBy: document.getElementById("eval-workshopBy").value,
+      workshopByLabel: document.getElementById("eval-workshopByLabel").value,
       theme: document.getElementById("eval-theme").value,
       themeLabel: document.getElementById("eval-themeLabel").value,
       convenerName: document.getElementById("eval-convenerName").value,

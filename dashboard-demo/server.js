@@ -98,7 +98,7 @@ app.get("/api/participants", async (req, res) => {
 // Register a new participant (the "registration" step)
 app.post("/api/participants", async (req, res) => {
   const {
-    name, email, workshopName, workshopBy, workshopDate, workshopEndDate,
+    name, email, workshopName, workshopBy, workshopByLabel, workshopDate, workshopEndDate,
     theme, themeLabel, convenerName, convenerTitle,
   } = req.body;
   if (!name || !email || !workshopName || !workshopBy) {
@@ -112,6 +112,7 @@ app.post("/api/participants", async (req, res) => {
       wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
       workshop_by: workshopBy,
+      workshop_by_label: workshopByLabel === "Resource Person" ? "Resource Person" : "Workshop by",
       workshop_date: workshopDate || null,
       workshop_end_date: workshopEndDate || null,
       theme: theme || null,
@@ -196,7 +197,7 @@ app.get("/api/evaluations", async (req, res) => {
 app.post("/api/evaluations", async (req, res) => {
   const {
     participantId, participantName, email, eventName,
-    workshopBy, theme, themeLabel, convenerName, convenerTitle,
+    workshopBy, workshopByLabel, theme, themeLabel, convenerName, convenerTitle,
     evaluatorName, evaluatorTitle, marksTotal, marksMax, grade,
     evaluationParameters, comments, audioFeedbackUrl,
   } = req.body;
@@ -217,6 +218,7 @@ app.post("/api/evaluations", async (req, res) => {
       wallet_address: getPlatformWalletAddress(),
       event_name: eventName,
       workshop_by: workshopBy,
+      workshop_by_label: workshopByLabel === "Resource Person" ? "Resource Person" : "Workshop by",
       theme: theme || null,
       theme_label: theme ? (themeLabel || "Theme") : null,
       convener_name: convenerName || null,
@@ -318,6 +320,7 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
     const email = getField(row, "Email", "Email Address");
     const workshopName = getField(row, "Workshop Name", "Workshop", "Event Name");
     const workshopBy = getField(row, "Workshop By", "Workshop by", "Instructor", "Host");
+    const workshopByLabel = getField(row, "Workshop By Label", "Workshop by Label", "Workshop By Type");
     const workshopDate = getField(row, "Workshop Date", "Date");
 
     if (!name || !email || !workshopName || !workshopBy) {
@@ -331,6 +334,7 @@ app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res
       wallet_address: getPlatformWalletAddress(),
       workshop_name: workshopName,
       workshop_by: workshopBy,
+      workshop_by_label: workshopByLabel === "Resource Person" ? "Resource Person" : "Workshop by",
       workshop_date: workshopDate || null,
       // approval_status and certificate_status default to Pending/NotIssued
       // via the table's own column defaults -- not set here on purpose.
